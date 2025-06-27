@@ -45,7 +45,7 @@ generating seed phrases should be:
 
 ## usage
 
-generate 12-word phrase (standard):
+generate 12-word phrase (default):
 
 ```bash
 s33d -w 12
@@ -54,7 +54,7 @@ s33d -w 12
 generate 24-word phrase (extra security):
 
 ```bash
-s33d
+s33d -w 24
 ```
 
 generate with qr code for mobile wallets:

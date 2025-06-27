@@ -6,7 +6,7 @@ use unicode_width::UnicodeWidthStr;
 use qrcode::QrCode;
 
 
-const DEFAULT_STRENGTH: usize = 256;
+const DEFAULT_STRENGTH: usize = 128;
 const TARGET_BOX_WIDTH: usize = 63;
 const WORD_GRID_COLUMNS: usize = 4;
 
@@ -50,7 +50,7 @@ fn language_display_name(language: Language) -> &'static str {
                   Store them securely and never share them online."
 )]
 struct Args {
-    /// Number of words (12 = good security, 24 = maximum security)
+    /// Number of words (12 = default, 24 = extra security)
     #[arg(
         short = 'w',
         value_parser = validate_words,
@@ -108,7 +108,7 @@ fn main() {
     } else if let Some(strength) = args.strength {
         strength
     } else {
-        // Default to 24 words (256 bits) for maximum security
+        // Default to 12 words (128 bits) for good security
         DEFAULT_STRENGTH
     };
 

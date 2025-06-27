@@ -11,7 +11,8 @@ generating seed phrases should be:
 - 🎯 simple (just works™)
 - 🛠 reliable (follows bip39 standard)
 - ⚡️ fast (< 1ms generation time)
-- 📦 tiny (< 700kb binary)
+- 🌍 multilingual (10 languages)
+- 📦 tiny (~1.2mb binary)
 
 ## install
 
@@ -46,7 +47,7 @@ generating seed phrases should be:
 generate 12-word phrase (standard):
 
 ```bash
-s33d --words 12
+s33d -w 12
 ```
 
 generate 24-word phrase (extra security):
@@ -55,23 +56,46 @@ generate 24-word phrase (extra security):
 s33d
 ```
 
+generate in different language:
+
+```bash
+s33d -l japanese
+s33d -l french
+```
+
 advanced - custom entropy bits (128-256):
 
 ```bash
-s33d --strength 192
+s33d -s 192
 ```
 
 show technical details:
 
 ```bash
-s33d --entropy
+s33d -e
 ```
 
 quiet mode (just the phrase):
 
 ```bash
-s33d --quiet
+s33d -q
 ```
+
+list all supported languages:
+
+```bash
+s33d --list
+```
+
+## languages
+
+supports 10 languages with perfect compatibility:
+
+- english (widely supported by all wallets)
+- japanese, korean, chinese (simplified/traditional)
+- french, italian, spanish, portuguese, czech
+
+**note**: english is recommended for maximum wallet compatibility
 
 ## security
 
@@ -82,6 +106,16 @@ s33d --quiet
 - verify words before final storage
 - never share your phrase
 - consider hardware wallets
+
+## entropy source
+
+uses your operating system's cryptographically secure random number generator:
+
+- unix/linux: `/dev/urandom`
+- windows: `CryptGenRandom`
+- macos: `SecRandomCopyBytes`
+
+this ensures truly random, unpredictable seed generation with proper entropy.
 
 ## license
 

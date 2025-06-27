@@ -16,9 +16,10 @@ name = "s33d"
 path = "src/main.rs"
 
 [dependencies]
-bip39 = "2.2.0"
+bip39 = { version = "2.2.0", features = ["chinese-simplified", "chinese-traditional", "french", "italian", "japanese", "korean", "spanish", "czech", "portuguese"] }
 clap = { version = "4.5", features = ["derive"] }
 rand = "0.8"
+unicode-width = "0.1.11"
 
 [profile.release]
 lto = true

@@ -10,9 +10,10 @@ generating seed phrases should be:
 - 🔒 secure (using os-level entropy)
 - 🎯 simple (just works™)
 - 🛠 reliable (follows bip39 standard)
-- ⚡️ fast (< 1ms generation time)
+- ⚡️ fast (< 4ms generation time)
+- 📦 tiny (~1mb binary)
 - 🌍 multilingual (10 languages)
-- 📦 tiny (~1.2mb binary)
+- 📱 mobile-ready (qr code support)
 
 ## install
 
@@ -56,6 +57,12 @@ generate 24-word phrase (extra security):
 s33d
 ```
 
+generate with qr code for mobile wallets:
+
+```bash
+s33d -q
+```
+
 generate in different language:
 
 ```bash
@@ -75,10 +82,10 @@ show technical details:
 s33d -e
 ```
 
-quiet mode (just the phrase):
+clean mode (just the phrase):
 
 ```bash
-s33d -q
+s33d -c
 ```
 
 list all supported languages:
@@ -98,8 +105,6 @@ supports 10 languages with perfect compatibility:
 **note**: english is recommended for maximum wallet compatibility
 
 ## security
-
-⚠️ important:
 
 - write phrases on paper, never digitally
 - store in secure location

@@ -20,6 +20,7 @@ bip39 = { version = "2.2.0", features = ["chinese-simplified", "chinese-traditio
 clap = { version = "4.5", features = ["derive"] }
 rand = "0.8"
 unicode-width = "0.1.11"
+qrcode = "0.14"
 
 [profile.release]
 lto = true

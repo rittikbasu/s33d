@@ -1,0 +1,27 @@
+[package]
+name = "s33d"
+version = "0.1.0"
+edition = "2021"
+authors = ["rittikbasu"]
+description = "Secure command-line tool for generating BIP39 mnemonic phrases"
+readme = "README.md"
+homepage = "https://github.com/rittikbasu/s33d"
+repository = "https://github.com/rittikbasu/s33d"
+license = "MIT"
+keywords = ["bip39", "mnemonic", "cryptocurrency", "bitcoin", "wallet", "s33d"]
+categories = ["command-line-utilities", "cryptography"]
+
+[[bin]]
+name = "s33d"
+path = "src/main.rs"
+
+[dependencies]
+bip39 = "2.2.0"
+clap = { version = "4.5", features = ["derive"] }
+rand = "0.8"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

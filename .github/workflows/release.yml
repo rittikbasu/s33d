@@ -5,9 +5,12 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
-  build-and-release:
-    name: Build and Release
+  build:
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -30,78 +33,52 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          override: true
+          targets: ${{ matrix.target }}
 
       - name: Build release binary
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Prepare artifact
+        shell: bash
         run: |
           mkdir -p release
-          cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} release/${{ matrix.asset_name }}
-          chmod +x release/${{ matrix.asset_name }}
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }}.exe release/${{ matrix.asset_name }}.exe
+          else
+            cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} release/${{ matrix.asset_name }}
+            chmod +x release/${{ matrix.asset_name }}
+          fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: release/${{ matrix.asset_name }}
 
-  create-release:
+  release:
     name: Create Release
-    needs: build-and-release
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          files: |
+            artifacts/s33d-macos-x86_64/s33d-macos-x86_64
+            artifacts/s33d-macos-aarch64/s33d-macos-aarch64
+            artifacts/s33d-linux-x86_64/s33d-linux-x86_64
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
-
-      - name: Upload macOS x86_64 Asset
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./s33d-macos-x86_64/s33d-macos-x86_64
-          asset_name: s33d-macos-x86_64
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS ARM64 Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./s33d-macos-aarch64/s33d-macos-aarch64
-          asset_name: s33d-macos-aarch64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Linux x86_64 Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./s33d-linux-x86_64/s33d-linux-x86_64
-          asset_name: s33d-linux-x86_64
-          asset_content_type: application/octet-stream

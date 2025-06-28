@@ -3,9 +3,17 @@
 a fully offline, paranoid-friendly cli tool that generates **bip-39 compatible** seed phrases using strong entropy and secure randomness.  
 just you, your machine, and your seed.
 
-## why
+![s33d terminal output](https://ik.imagekit.io/zwcfsadeijm/s33d_dfJp4GJ5e.png)
 
-generating seed phrases should be:
+## what is this?
+
+a **seed phrase** (also called a mnemonic) is a human-readable backup of your cryptocurrency wallet. instead of remembering complex private keys like `0x3a4b5c6d...`, you get 12 simple words like `apple tree moon river`.
+
+same security, but you can actually write it down and remember it. lose your phone? use the seed phrase to restore your wallet. it's like a master key that recreates all your crypto addresses.
+
+## why?
+
+because generating seed phrases should be:
 
 - 🔒 secure (using os-level entropy)
 - 🎯 simple (just works™)

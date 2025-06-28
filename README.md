@@ -1,6 +1,6 @@
 # s33d
 
-a fully offline, zero-dependency cli tool that generates **bip-39 compatible** seed phrases using strong entropy and secure randomness.  
+a fully offline, paranoid friendly cli tool that generates **bip-39 compatible** seed phrases using strong entropy and secure randomness.  
 just you, your machine, and your seed.
 
 ## why

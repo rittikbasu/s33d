@@ -89,6 +89,12 @@ show technical details:
 s33d -e
 ```
 
+show entropy as hexadecimal:
+
+```bash
+s33d -x
+```
+
 clean mode (just the phrase):
 
 ```bash

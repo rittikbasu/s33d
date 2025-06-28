@@ -83,6 +83,9 @@ struct Args {
     #[arg(short = 'q', help = "Generate QR code for easy mobile import")]
     qr_code: bool,
 
+    #[arg(short = 'x', long = "hex", help = "Show entropy as hexadecimal")]
+    show_hex: bool,
+
     #[arg(long = "list", help = "List all supported languages")]
     list_languages: bool,
 }
@@ -122,11 +125,14 @@ fn main() {
 
     if args.clean {
         println!("{}", mnemonic);
+        if args.show_hex {
+            println!("hex: {}", hex::encode(&entropy));
+        }
         if args.qr_code {
             print_qr_code(&mnemonic.to_string());
         }
     } else {
-        print_mnemonic_with_info(&mnemonic, word_count, strength, args.show_entropy, args.language, args.qr_code);
+        print_mnemonic_with_info(&mnemonic, &entropy, word_count, strength, args.show_entropy, args.show_hex, args.language, args.qr_code);
     }
 }
 
@@ -221,8 +227,6 @@ fn print_supported_languages() {
     println!("usage:");
     println!("  s33d -l english");
     println!("  s33d -l ja -w 24");
-    println!("  s33d -q             # with qr code");
-    println!("  s33d -c             # clean output");
     println!();
 }
 
@@ -257,7 +261,7 @@ fn print_warning(message: &str) {
     println!("└─────────────────────────────────────────────────────────────────┘");
 }
 
-fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: usize, show_entropy: bool, language: Language, qr_code: bool) {
+fn print_mnemonic_with_info(mnemonic: &Mnemonic, entropy: &[u8], word_count: usize, strength: usize, show_entropy: bool, show_hex: bool, language: Language, qr_code: bool) {
     println!();
     println!("┌─ s33d: bip39 mnemonic generator ────────────────────────────────┐");
     println!("│ cryptographically secure seed phrase generation                 │");
@@ -274,6 +278,24 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: us
         let lang_str = language_display_name(language);
         println!("│ ▪ language        : {:<43} │", lang_str);
 
+        println!("└─────────────────────────────────────────────────────────────────┘");
+    }
+    
+    if show_hex {
+        println!();
+        println!("┌─ entropy (hexadecimal) ─────────────────────────────────────────┐");
+        let hex_string = hex::encode(entropy);
+        
+        // Split hex into chunks for better readability
+        let chunk_size = 32; // 16 bytes = 32 hex chars per line
+        let chunks: Vec<&str> = hex_string.as_bytes().chunks(chunk_size)
+            .map(|chunk| std::str::from_utf8(chunk).unwrap())
+            .collect();
+        
+        for chunk in chunks {
+            println!("│ {:<63} │", chunk);
+        }
+        
         println!("└─────────────────────────────────────────────────────────────────┘");
     }
     

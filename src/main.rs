@@ -50,7 +50,6 @@ fn language_display_name(language: Language) -> &'static str {
                   Store them securely and never share them online."
 )]
 struct Args {
-    /// Number of words (12 = default, 24 = extra security)
     #[arg(
         short = 'w',
         value_parser = validate_words,
@@ -59,7 +58,6 @@ struct Args {
     )]
     words: Option<usize>,
 
-    /// Advanced: Entropy strength in bits (128, 160, 192, 224, 256)
     #[arg(
         short = 's', 
         value_parser = validate_strength,
@@ -68,7 +66,6 @@ struct Args {
     )]
     strength: Option<usize>,
 
-    /// Language for the mnemonic words
     #[arg(
         short = 'l',
         default_value = "english",
@@ -77,19 +74,15 @@ struct Args {
     )]
     language: Language,
 
-    /// Show technical details about entropy and generation
     #[arg(short = 'e', help = "Show entropy and technical details")]
     show_entropy: bool,
 
-    /// Clean mode - only output the mnemonic phrase
     #[arg(short = 'c', help = "Clean mode - only output the phrase")]
     clean: bool,
 
-    /// Generate QR code for easy mobile import
     #[arg(short = 'q', help = "Generate QR code for easy mobile import")]
     qr_code: bool,
 
-    /// List all supported languages
     #[arg(long = "list", help = "List all supported languages")]
     list_languages: bool,
 }
@@ -102,24 +95,19 @@ fn main() {
         return;
     }
 
-    // Determine strength based on words or strength argument
     let strength = if let Some(words) = args.words {
         words_to_strength(words)
     } else if let Some(strength) = args.strength {
         strength
     } else {
-        // Default to 12 words (128 bits) for good security
         DEFAULT_STRENGTH
     };
 
-    // Verify system has sufficient entropy
     if !args.clean {
         verify_entropy_quality();
     }
 
     let word_count = strength_to_word_count(strength);
-
-    // Generate cryptographically secure entropy
     let entropy_bytes = strength / 8;
     let mut entropy = vec![0u8; entropy_bytes];
     rand::thread_rng().fill_bytes(&mut entropy);
@@ -133,13 +121,11 @@ fn main() {
     };
 
     if args.clean {
-        // Just output the phrase for scripting
         println!("{}", mnemonic);
         if args.qr_code {
             print_qr_code(&mnemonic.to_string());
         }
     } else {
-        // User-friendly output with security warnings
         print_mnemonic_with_info(&mnemonic, word_count, strength, args.show_entropy, args.language, args.qr_code);
     }
 }
@@ -285,8 +271,6 @@ fn print_warning(message: &str) {
 
 fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: usize, show_entropy: bool, language: Language, qr_code: bool) {
     println!();
-    
-    // Header
     println!("┌─ s33d: bip39 mnemonic generator ────────────────────────────────┐");
     println!("│ cryptographically secure seed phrase generation                 │");
     println!("└─────────────────────────────────────────────────────────────────┘");
@@ -310,7 +294,7 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: us
     let phrase = mnemonic.to_string();
     let words: Vec<&str> = phrase.split_whitespace().collect();
     
-    // For Korean, skip the box and just print words directly due to iTerm rendering issues
+    // For Korean, skip the box and just print words directly due to rendering issues
     if language == Language::Korean {
         println!("your {} word seed phrase", word_count);
         println!();
@@ -321,8 +305,6 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: us
     } else {
         // Standard box layout for all other languages
         let num_rows = (words.len() + WORD_GRID_COLUMNS - 1) / WORD_GRID_COLUMNS;
-
-        // Calculate the maximum visual width required for each column
         let mut column_widths = vec![0; WORD_GRID_COLUMNS];
         for col in 0..WORD_GRID_COLUMNS {
             for row in 0..num_rows {
@@ -355,7 +337,6 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: us
             separators.push(format!("{}{}", base_separator, " ".repeat(extra_padding_per_separator + extra_padding)));
         }
 
-        // Print header
         let header_text = format!(" your {} word seed phrase ", word_count);
         let mut header = format!("┌─{}", header_text);
         let header_width = UnicodeWidthStr::width(header.as_str());
@@ -365,7 +346,6 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: us
         header.push('┐');
         println!("{}", header);
 
-        // Print content rows
         for row in 0..num_rows {
             let mut line_parts = Vec::new();
             for col in 0..WORD_GRID_COLUMNS {
@@ -392,7 +372,6 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, word_count: usize, strength: us
             println!("│ {} │", line);
         }
         
-        // Print footer
         println!("└{}┘", "─".repeat(final_width + 2));
     }
     
@@ -425,33 +404,28 @@ fn print_qr_code(mnemonic: &str) {
             let grid: Vec<bool> = code.to_colors().into_iter().map(|c| c == qrcode::Color::Dark).collect();
             let width = (grid.len() as f64).sqrt() as usize;
             
-            // QR code layout constants
             const QUIET_ZONE_MODULES: usize = 2;
             const TOP_BOTTOM_PADDING_LINES: usize = QUIET_ZONE_MODULES / 2;
             
             let qr_width_chars = width + QUIET_ZONE_MODULES * 2;
             let box_inner_width = std::cmp::max(TARGET_BOX_WIDTH, qr_width_chars);
 
-            // Pre-calculate padding strings
             let h_padding = " ".repeat(QUIET_ZONE_MODULES);
             let empty_line = " ".repeat(qr_width_chars);
             let total_padding = box_inner_width - qr_width_chars;
             let left_padding = " ".repeat(total_padding / 2);
             let right_padding = " ".repeat(total_padding - (total_padding / 2));
 
-            // Print header with dynamic width
             println!();
             let title = "qr code for mobile import";
             let header_content_width = box_inner_width - 2;
             let padding_len = header_content_width - title.len();
             println!("┌─ {} {}─┐", title, "─".repeat(padding_len));
 
-            // Top padding
             for _ in 0..TOP_BOTTOM_PADDING_LINES {
                  println!("│ {}{}{} │", left_padding, empty_line, right_padding);
             }
 
-            // QR code content using half-block characters for compact rendering
             for y in (0..width).step_by(2) {
                 let mut line = h_padding.clone();
                 for x in 0..width {
@@ -470,7 +444,6 @@ fn print_qr_code(mnemonic: &str) {
                 println!("│ {}{}{} │", left_padding, line, right_padding);
             }
 
-            // Bottom padding
             for _ in 0..TOP_BOTTOM_PADDING_LINES {
                  println!("│ {}{}{} │", left_padding, empty_line, right_padding);
             }

@@ -243,18 +243,6 @@ fn verify_entropy_quality() {
             print_warning("High-quality entropy source (/dev/random) not available - using /dev/urandom");
         }
     }
-    
-    #[cfg(windows)]
-    {
-        // Windows uses CryptGenRandom which is cryptographically secure
-        // No additional checks needed as it's handled by the OS
-    }
-    
-    #[cfg(target_os = "macos")]
-    {
-        // macOS uses SecRandomCopyBytes which is cryptographically secure
-        // No additional checks needed
-    }
 }
 
 fn print_error(message: &str) {

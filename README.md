@@ -25,31 +25,17 @@ because generating seed phrases should be:
 
 ## install
 
-- quick install (recommended):
+### homebrew (macos & linux)
 
-  ```bash
-  cargo install --git https://github.com/rittikbasu/s33d
-  ```
+```bash
+brew install rittikbasu/s33d/s33d
+```
 
-- manual build (for development):
+### cargo (cross-platform)
 
-  clone repo:
-
-  ```bash
-  git clone https://github.com/rittikbasu/s33d.git
-  ```
-
-  navigate to project directory:
-
-  ```bash
-  cd s33d
-  ```
-
-  build optimized binary (will be in target/release/s33d):
-
-  ```bash
-  cargo build --release
-  ```
+```bash
+cargo install --git https://github.com/rittikbasu/s33d
+```
 
 ## usage
 
@@ -107,6 +93,20 @@ list all supported languages:
 s33d --list
 ```
 
+## updating
+
+### homebrew
+
+```bash
+brew update && brew upgrade s33d
+```
+
+### cargo
+
+```bash
+cargo install --git https://github.com/rittikbasu/s33d --force
+```
+
 ## languages
 
 supports 10 languages with perfect compatibility:
@@ -134,6 +134,20 @@ uses your operating system's cryptographically secure random number generator:
 - macos: `SecRandomCopyBytes`
 
 this ensures truly random, unpredictable seed generation with proper entropy.
+
+## development
+
+### manual build
+
+```bash
+git clone https://github.com/rittikbasu/s33d.git
+cd s33d
+cargo build --release
+```
+
+### releases
+
+pre-built binaries available at [releases](https://github.com/rittikbasu/s33d/releases)
 
 ## license
 

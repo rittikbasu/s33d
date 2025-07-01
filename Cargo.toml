@@ -1,6 +1,6 @@
 [package]
 name = "s33d"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["rittikbasu"]
 description = "Secure command-line tool for generating BIP39 mnemonic phrases"

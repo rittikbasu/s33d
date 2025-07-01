@@ -1,9 +1,13 @@
+#![forbid(unsafe_code)]
+
 use bip39::{Language, Mnemonic};
 use clap::Parser;
 use rand::RngCore;
 use std::process;
 use unicode_width::UnicodeWidthStr;
 use qrcode::QrCode;
+use rand::rngs::OsRng;
+use zeroize::{Zeroize, Zeroizing};
 
 
 const DEFAULT_STRENGTH: usize = 128;
@@ -112,10 +116,10 @@ fn main() {
 
     let word_count = strength_to_word_count(strength);
     let entropy_bytes = strength / 8;
-    let mut entropy = vec![0u8; entropy_bytes];
-    rand::thread_rng().fill_bytes(&mut entropy);
+    let mut entropy = Zeroizing::new(vec![0u8; entropy_bytes]);
+    OsRng.fill_bytes(&mut entropy[..]);
 
-    let mnemonic = match Mnemonic::from_entropy_in(args.language, &entropy) {
+    let mnemonic = match Mnemonic::from_entropy_in(args.language, &entropy[..]) {
         Ok(m) => m,
         Err(e) => {
             print_error(&format!("Error generating mnemonic: {}", e));
@@ -124,15 +128,17 @@ fn main() {
     };
 
     if args.clean {
-        println!("{}", mnemonic);
+        let mut phrase = mnemonic.to_string();
+        println!("{}", phrase);
         if args.show_hex {
-            println!("hex: {}", hex::encode(&entropy));
+            println!("hex: {}", hex::encode(&entropy[..]));
         }
         if args.qr_code {
-            print_qr_code(&mnemonic.to_string());
+            print_qr_code(&phrase);
         }
+        phrase.zeroize();
     } else {
-        print_mnemonic_with_info(&mnemonic, &entropy, word_count, strength, args.show_entropy, args.show_hex, args.language, args.qr_code);
+        print_mnemonic_with_info(&mnemonic, &entropy[..], word_count, strength, args.show_entropy, args.show_hex, args.language, args.qr_code);
     }
 }
 
@@ -295,13 +301,13 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, entropy: &[u8], word_count: usi
         for chunk in chunks {
             println!("│ {:<63} │", chunk);
         }
-        
+
         println!("└─────────────────────────────────────────────────────────────────┘");
     }
     
     println!();
     
-    let phrase = mnemonic.to_string();
+    let mut phrase = mnemonic.to_string();
     let words: Vec<&str> = phrase.split_whitespace().collect();
     
     // For Korean, skip the box and just print words directly due to rendering issues
@@ -406,6 +412,7 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, entropy: &[u8], word_count: usi
     if qr_code {
         print_qr_code(&phrase);
     }
+    phrase.zeroize();
 }
 
 fn print_qr_code(mnemonic: &str) {

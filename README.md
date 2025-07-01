@@ -63,12 +63,6 @@ generate in different language:
 s33d -l japanese
 ```
 
-advanced - custom entropy bits (128-256):
-
-```bash
-s33d -s 192
-```
-
 show technical details:
 
 ```bash
@@ -91,6 +85,33 @@ list all supported languages:
 
 ```bash
 s33d --list
+```
+
+## advanced usage
+
+add optional passphrase (25th word):
+
+```bash
+s33d -p
+```
+
+show derived 64-byte master seed:
+
+```bash
+s33d -S
+```
+
+combine passphrase + seed output:
+
+```bash
+s33d -p -S
+```
+
+custom entropy strength (128-256 bits):
+
+```bash
+s33d -s 192
+s33d -s 256
 ```
 
 ## updating
@@ -124,6 +145,10 @@ supports 10 languages with perfect compatibility:
 - verify words before final storage
 - never share your phrase
 - consider hardware wallets
+- if using passphrases:
+  - treat passphrases like passwords - never forget them
+  - store phrase and passphrase separately
+  - test recovery before storing large amounts
 
 ## security features
 

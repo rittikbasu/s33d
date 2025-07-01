@@ -8,6 +8,7 @@ use unicode_width::UnicodeWidthStr;
 use qrcode::QrCode;
 use rand::rngs::OsRng;
 use zeroize::{Zeroize, Zeroizing};
+use rpassword::prompt_password;
 
 
 const DEFAULT_STRENGTH: usize = 128;
@@ -63,14 +64,6 @@ struct Args {
     words: Option<usize>,
 
     #[arg(
-        short = 's', 
-        value_parser = validate_strength,
-        help = "Advanced: Entropy strength in bits",
-        conflicts_with = "words"
-    )]
-    strength: Option<usize>,
-
-    #[arg(
         short = 'l',
         default_value = "english",
         value_parser = parse_language,
@@ -89,6 +82,20 @@ struct Args {
 
     #[arg(short = 'x', long = "hex", help = "Show entropy as hexadecimal")]
     show_hex: bool,
+
+    #[arg(
+        short = 's', 
+        value_parser = validate_strength,
+        help = "Advanced: Entropy strength in bits",
+        conflicts_with = "words"
+    )]
+    strength: Option<usize>,
+
+    #[arg(short = 'p', long = "passphrase", help = "Advanced: Prompt for an optional BIP39 passphrase")]
+    passphrase: bool,
+
+    #[arg(short = 'S', long = "seed", help = "Advanced: Show derived 64-byte seed as hexadecimal")]
+    show_seed: bool,
 
     #[arg(long = "list", help = "List all supported languages")]
     list_languages: bool,
@@ -127,18 +134,64 @@ fn main() {
         }
     };
 
+    let passphrase = if args.passphrase {
+        let pass = prompt_password("enter passphrase (leave blank for none): ")
+            .unwrap_or_else(|_| {
+                print_error("Failed to read passphrase");
+                process::exit(1);
+            });
+
+        if pass.is_empty() {
+            Zeroizing::new(pass)
+        } else {
+            let confirm = prompt_password("confirm passphrase: ")
+                .unwrap_or_else(|_| {
+                    print_error("Failed to read passphrase");
+                    process::exit(1);
+                });
+            if pass != confirm {
+                print_error("passphrases do not match");
+                process::exit(2);
+            }
+            Zeroizing::new(pass)
+        }
+    } else {
+        Zeroizing::new(String::new())
+    };
+
+    let seed_opt: Option<Zeroizing<Vec<u8>>> = if args.show_seed {
+        let seed_arr = mnemonic.to_seed(passphrase.as_str());
+        Some(Zeroizing::new(seed_arr.to_vec()))
+    } else {
+        None
+    };
+
     if args.clean {
         let mut phrase = mnemonic.to_string();
         println!("{}", phrase);
         if args.show_hex {
             println!("hex: {}", hex::encode(&entropy[..]));
         }
+        if let Some(seed) = &seed_opt {
+            println!("seed: {}", hex::encode(&seed[..]));
+        }
         if args.qr_code {
             print_qr_code(&phrase);
         }
         phrase.zeroize();
     } else {
-        print_mnemonic_with_info(&mnemonic, &entropy[..], word_count, strength, args.show_entropy, args.show_hex, args.language, args.qr_code);
+        print_mnemonic_with_info(
+            &mnemonic,
+            &entropy[..],
+            seed_opt.as_ref().map(|s| &s[..]),
+            word_count,
+            strength,
+            args.show_entropy,
+            args.show_hex,
+            args.show_seed,
+            args.language,
+            args.qr_code,
+        );
     }
 }
 
@@ -267,7 +320,18 @@ fn print_warning(message: &str) {
     println!("└─────────────────────────────────────────────────────────────────┘");
 }
 
-fn print_mnemonic_with_info(mnemonic: &Mnemonic, entropy: &[u8], word_count: usize, strength: usize, show_entropy: bool, show_hex: bool, language: Language, qr_code: bool) {
+fn print_mnemonic_with_info(
+    mnemonic: &Mnemonic,
+    entropy: &[u8],
+    seed_opt: Option<&[u8]>,
+    word_count: usize,
+    strength: usize,
+    show_entropy: bool,
+    show_hex: bool,
+    show_seed: bool,
+    language: Language,
+    qr_code: bool,
+) {
     println!();
     println!("┌─ s33d: bip39 mnemonic generator ────────────────────────────────┐");
     println!("│ cryptographically secure seed phrase generation                 │");
@@ -303,6 +367,22 @@ fn print_mnemonic_with_info(mnemonic: &Mnemonic, entropy: &[u8], word_count: usi
         }
 
         println!("└─────────────────────────────────────────────────────────────────┘");
+    }
+    
+    if show_seed {
+        if let Some(seed) = seed_opt {
+            println!();
+            println!("┌─ master seed (hexadecimal) ─────────────────────────────────────┐");
+            let hex_string = hex::encode(seed);
+            let chunk_size = 32; // 32 chars per line
+            let chunks: Vec<&str> = hex_string.as_bytes().chunks(chunk_size)
+                .map(|chunk| std::str::from_utf8(chunk).unwrap())
+                .collect();
+            for chunk in chunks {
+                println!("│ {:<63} │", chunk);
+            }
+            println!("└─────────────────────────────────────────────────────────────────┘");
+        }
     }
     
     println!();

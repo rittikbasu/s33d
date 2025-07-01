@@ -23,6 +23,7 @@ unicode-width = "0.1.11"
 qrcode = "0.14"
 hex = "0.4"
 zeroize = "1.7"
+rpassword = "7"
 
 [profile.release]
 lto = true

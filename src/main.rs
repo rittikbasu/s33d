@@ -47,19 +47,19 @@ fn language_display_name(language: Language) -> &'static str {
 #[command(
     author = "rittikbasu",
     version, 
-    about = "Generate secure BIP39 seed phrases for cryptocurrency wallets",
+    about = "generate secure BIP39 seed phrases for your bitcoin wallet",
     long_about = "s33d generates cryptographically secure BIP39 mnemonic phrases.\n\
-                  These phrases can restore cryptocurrency wallets.\n\
+                  these phrases can restore your bitcoin wallet.\n\
                   \n\
-                  SECURITY WARNING: Generated phrases provide access to funds.\n\
-                  Store them securely and never share them online."
+                  SECURITY WARNING: generated phrases provide access to funds.\n\
+                  store them securely and never share them online."
 )]
 struct Args {
     #[arg(
         short = 'w',
         value_parser = validate_words,
         help = "Number of words in the phrase (12 or 24)",
-        conflicts_with = "strength"
+        conflicts_with = "bits"
     )]
     words: Option<usize>,
 
@@ -84,17 +84,17 @@ struct Args {
     show_hex: bool,
 
     #[arg(
-        short = 's', 
-        value_parser = validate_strength,
-        help = "Advanced: Entropy strength in bits",
+        short = 'b',
+        value_parser = validate_bits,
+        help = "Advanced: Entropy bits (128-256)",
         conflicts_with = "words"
     )]
-    strength: Option<usize>,
+    bits: Option<usize>,
 
     #[arg(short = 'p', long = "passphrase", help = "Advanced: Prompt for an optional BIP39 passphrase")]
     passphrase: bool,
 
-    #[arg(short = 'S', long = "seed", help = "Advanced: Show derived 64-byte seed as hexadecimal")]
+    #[arg(short = 's', long = "seed", help = "Advanced: Show derived 64-byte seed as hexadecimal")]
     show_seed: bool,
 
     #[arg(long = "list", help = "List all supported languages")]
@@ -109,10 +109,10 @@ fn main() {
         return;
     }
 
-    let strength = if let Some(words) = args.words {
-        words_to_strength(words)
-    } else if let Some(strength) = args.strength {
-        strength
+    let bits = if let Some(words) = args.words {
+        words_to_bits(words)
+    } else if let Some(bits) = args.bits {
+        bits
     } else {
         DEFAULT_STRENGTH
     };
@@ -121,8 +121,8 @@ fn main() {
         verify_entropy_quality();
     }
 
-    let word_count = strength_to_word_count(strength);
-    let entropy_bytes = strength / 8;
+    let word_count = bits_to_word_count(bits);
+    let entropy_bytes = bits / 8;
     let mut entropy = Zeroizing::new(vec![0u8; entropy_bytes]);
     OsRng.fill_bytes(&mut entropy[..]);
 
@@ -185,7 +185,7 @@ fn main() {
             &entropy[..],
             seed_opt.as_ref().map(|s| &s[..]),
             word_count,
-            strength,
+            bits,
             args.show_entropy,
             args.show_hex,
             args.show_seed,
@@ -199,19 +199,19 @@ fn validate_words(s: &str) -> Result<usize, String> {
     let words: usize = s.parse().map_err(|_| "Word count must be a valid number")?;
     match words {
         12 | 24 => Ok(words),
-        _ => Err("Word count must be either 12 or 24. Use 12 for good security or 24 for maximum security.".to_string()),
+        _ => Err("word count must be either 12 or 24. use 12 for good security or 24 for maximum security.".to_string()),
     }
 }
 
-fn validate_strength(s: &str) -> Result<usize, String> {
-    let strength: usize = s.parse().map_err(|_| "Strength must be a valid number")?;
-    match strength {
-        128 | 160 | 192 | 224 | 256 => Ok(strength),
-        _ => Err("Strength must be one of: 128, 160, 192, 224, or 256 bits".to_string()),
+fn validate_bits(s: &str) -> Result<usize, String> {
+    let bits: usize = s.parse().map_err(|_| "bits must be a valid number")?;
+    match bits {
+        128 | 160 | 192 | 224 | 256 => Ok(bits),
+        _ => Err("Bits must be one of: 128, 160, 192, 224, or 256".to_string()),
     }
 }
 
-fn words_to_strength(words: usize) -> usize {
+fn words_to_bits(words: usize) -> usize {
     match words {
         12 => 128,
         24 => 256,
@@ -219,11 +219,11 @@ fn words_to_strength(words: usize) -> usize {
     }
 }
 
-fn strength_to_word_count(strength: usize) -> usize {
+fn bits_to_word_count(bits: usize) -> usize {
     // BIP39 formula: word_count = (entropy_bits + checksum_bits) / 11
     // Checksum bits = entropy_bits / 32
-    let checksum_bits = strength / 32;
-    (strength + checksum_bits) / 11
+    let checksum_bits = bits / 32;
+    (bits + checksum_bits) / 11
 }
 
 fn parse_language(s: &str) -> Result<Language, String> {
@@ -239,7 +239,7 @@ fn parse_language(s: &str) -> Result<Language, String> {
         "czech" | "cs" => Ok(Language::Czech),
         "portuguese" | "pt" => Ok(Language::Portuguese),
         _ => Err(format!(
-            "Unsupported language. Use --list to see available options."
+            "unsupported language. use --list to see available options."
         )),
     }
 }
@@ -295,7 +295,7 @@ fn verify_entropy_quality() {
     {
         use std::path::Path;
         if !Path::new("/dev/urandom").exists() {
-            print_warning("System entropy source (/dev/urandom) not found - entropy quality may be compromised");
+            print_warning("system entropy source (/dev/urandom) not found, entropy quality may be compromised");
             return;
         }
         
@@ -303,7 +303,7 @@ fn verify_entropy_quality() {
         if Path::new("/dev/random").exists() {
             // System has both entropy sources available - this is good
         } else {
-            print_warning("High-quality entropy source (/dev/random) not available - using /dev/urandom");
+            print_warning("high quality entropy source (/dev/random) not available, using /dev/urandom");
         }
     }
 }
@@ -325,7 +325,7 @@ fn print_mnemonic_with_info(
     entropy: &[u8],
     seed_opt: Option<&[u8]>,
     word_count: usize,
-    strength: usize,
+    bits: usize,
     show_entropy: bool,
     show_hex: bool,
     show_seed: bool,
@@ -340,9 +340,9 @@ fn print_mnemonic_with_info(
     if show_entropy {
         println!();
         println!("┌─ technical details ─────────────────────────────────────────────┐");
-        println!("│ ▪ entropy bits    : {:>3} bits                                    │", strength);
-        println!("│ ▪ checksum bits   : {:>3} bits                                    │", strength / 32);
-        println!("│ ▪ total bits      : {:>3} bits                                    │", strength + (strength / 32));
+        println!("│ ▪ entropy bits    : {:>3} bits                                    │", bits);
+        println!("│ ▪ checksum bits   : {:>3} bits                                    │", bits / 32);
+        println!("│ ▪ total bits      : {:>3} bits                                    │", bits + (bits / 32));
         println!("│ ▪ word count      : {:>3} words                                   │", word_count);
         
         let lang_str = language_display_name(language);
@@ -548,7 +548,7 @@ fn print_qr_code(mnemonic: &str) {
             println!("└{}┘", "─".repeat(box_inner_width + 2));
         }
         Err(e) => {
-            print_error(&format!("Failed to generate QR code: {}. The mnemonic may be too long.", e));
+            print_error(&format!("failed to generate QR code: {}. the mnemonic may be too long.", e));
         }
     }
 }

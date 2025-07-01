@@ -98,20 +98,20 @@ s33d -p
 show derived 64-byte master seed:
 
 ```bash
-s33d -S
+s33d -s
 ```
 
 combine passphrase + seed output:
 
 ```bash
-s33d -p -S
+s33d -p -s
 ```
 
 custom entropy strength (128-256 bits):
 
 ```bash
-s33d -s 192
-s33d -s 256
+s33d -b 192
+s33d -b 256
 ```
 
 ## updating

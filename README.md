@@ -117,13 +117,19 @@ supports 10 languages with perfect compatibility:
 
 **note**: english is recommended for maximum wallet compatibility
 
-## security
+## safety tips
 
-- write phrases on paper, never digitally
-- store in secure location
+- write your phrase on paper, never digitally
+- store it in a secure place
 - verify words before final storage
 - never share your phrase
 - consider hardware wallets
+
+## security features
+
+- wipes secrets from memory immediately after use
+- forbids unsafe code at compile time
+- checks all dependencies for known vulnerabilities automatically
 
 ## entropy source
 
